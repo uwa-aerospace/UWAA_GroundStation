@@ -19,20 +19,47 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 app.config.suppress_callback_exceptions = True
 
-#Reading a csv file
-df = pd.read_csv('/Users/GoldenFace/Desktop/Avionics/DataV/Data/temperature.csv')
+#Reading a csv file for Wind Measurement and Graph
+df = px.data.wind()
 pf = pd.read_csv('/Users/GoldenFace/Desktop/Avionics/DataV/Data/pressure.csv')
 
-#Plotting the data
-fig = go.Figure(go.Scatter(x=df['Time'], y=df['Temp'], name='Temperature in Kelvin'))
-fig.update_layout(title='Travel Log 1',
-                   plot_bgcolor='rgb(32, 26, 82)',
-                   showlegend=False)
+#Plotting the Wind Measurement
+fig = px.bar_polar(df, r="frequency", theta="direction", color="strength", template="plotly_dark", title='Wind Measurement', 
+                    color_discrete_sequence= px.colors.sequential.Plasma_r)
 
-pressure_fig = go.Figure(go.Scatter(x=pf['distance'], y=pf['pressure'], name='Pressure in Pa'))
-pressure_fig.update_layout(title='Travel Log 2',
-                   plot_bgcolor='rgb(32, 26, 82)',
-                   showlegend=False)
+########___MAP___#########
+#mark things on the map (Will convert this to trail of the rocket)
+locat = go.Figure(go.Scattermapbox(
+        lat=['-31.981179'],
+        lon=['115.819910'],
+        mode='markers',
+        marker=go.scattermapbox.Marker(
+            size=14
+        ),
+        text=['UWA'],
+    ))
+
+#Map layout
+locat.update_layout(
+    hovermode='closest',
+    mapbox=dict(
+        accesstoken='pk.eyJ1IjoicGV5bGlubmciLCJhIjoiY2s5aXBqcmptMWEzNzNtcDR4MWJvd2FuNSJ9.N7Q2yH7WQFsMv6uP8YOCEQ',
+        bearing=0,
+        center=go.layout.mapbox.Center(
+            lat=-31.981179,
+            lon=115.819910
+        ),
+        pitch=0,
+        zoom=15,
+        style='outdoors',
+    ),
+    title='Rocket Trail',
+    plot_bgcolor='rgb(32, 26, 82)',
+    showlegend=False,
+    template="plotly_dark",
+
+)
+
 
 #Building the banner that sits on top.
 #Logo on the left hand side and Rocket Progress Indicators on the right hand side.
@@ -128,10 +155,19 @@ def build_banner():
     ])
 
 #Graphing the first data set the "pressure" one
-def predicted_map():
+def graphy_graph():
+
+    pressure_fig = go.Figure(go.Scatter(x=pf['distance'], y=pf['pressure']))
+    pressure_fig.update_layout(title='Travel Log',
+                    xaxis_title='Time (s)',
+                   yaxis_title='Pressure (Pa)',
+                   plot_bgcolor='rgb(32, 26, 82)',
+                   showlegend=False,
+                   template="plotly_dark",)
+
     return html.Div(
         id="control-chart-container",
-        className="ten columns",
+        className="five columns",
         children=[
             dcc.Graph(id="pressure", figure = pressure_fig),
         ],
@@ -142,16 +178,117 @@ def predicted_map():
     )
 
 #Graphing the second data set the "temperature" one
-def actual_map():
+def wind_map():
     return html.Div(
         id="control-chart-container",
-        className="ten columns",
+        className="five columns",
         children=[
-            dcc.Graph(id="Temperature_Sensor", figure = fig),
+           dcc.Graph(id="Wind_measurement", figure = fig),
         ],
         style={
             'margin':'20px',
+            'background-color': '#201a52',
         },
+    )
+
+def top_panel():
+    return html.Div(
+        html.Div(
+            id="tabs-top-content",
+            children=[
+                html.Div([
+                    html.Div(
+                        id="card-4",
+                        children=[
+                            html.P("MARK 1"),
+                            daq.Gauge(
+                                id="progress-gauge",
+                                max=100,
+                                min=0,
+                                showCurrentValue=False,  # default size 200 pixel
+                                size=120,
+                            ),
+                        ],
+                    )],
+                    className="two columns",
+                ),
+
+                html.Div([
+                    html.Div(
+                        id="card-5",
+                        children=[
+                            html.P("MARK 2"),
+                            daq.Gauge(
+                                id="progress-gauge",
+                                max=80,
+                                min=0,
+                                showCurrentValue=False,  # default size 200 pixel
+                                size=120,
+                            ),
+                        ],
+                    )],
+                    className="two columns",
+                ),
+
+                html.Div([
+                    html.Div(
+                        id="card-6",
+                        children=[
+                            html.P("MARK 3"),
+                            daq.Gauge(
+                                id="progress-gauge",
+                                max=20,
+                                min=0,
+                                showCurrentValue=False,  # default size 200 pixel
+                                size=120,
+                            ),
+                        ],
+                    )],
+                    className="two columns",
+                ),
+
+                html.Div([
+                    html.Div(
+                        id="card-7",
+                        children=[
+                            html.P("MARK 4"),
+                            daq.Gauge(
+                                id="progress-gauge",
+                                max=50,
+                                min=0,
+                                showCurrentValue=False,  # default size 200 pixel
+                                size=120,
+                            ),
+                        ],
+                    )],
+                    className="two columns",
+                ),
+
+                html.Div([
+                    html.Div(
+                        id="card-8",
+                        children=[
+                            html.P("MARK 5"),
+                            daq.Gauge(
+                                id="progress-gauge",
+                                max=1000,
+                                min=0,
+                                showCurrentValue=False,  # default size 200 pixel
+                                size=120,
+                            ),
+                        ],
+                    )],
+                    className="two columns",
+                ),
+
+            ],
+        ),
+        className="ten columns",
+        style={
+                'margin': '0 0 0 20px',
+                'background-color': '#201a52',
+                'text-align': 'center',
+            },
     )
 
 #Creating the side panel.
@@ -165,12 +302,28 @@ def side_panel():
         children=[
             html.Br(),
             html.Div([
-                html.Div(
-                    id="card-1",
-                    children=[
-                        html.P("UPLOAD DATA"),
-                    ],
-                )],
+                html.Div([
+                    dcc.Upload(
+                        id='upload-data',
+                        children=html.Div([
+                            'Drag and Drop or ',
+                            html.A('Select Files')
+                        ]),
+                        style={
+                            'width': '80%',
+                            'height': '80px',
+                            'lineHeight': '40px',
+                            'borderWidth': '1px',
+                            'borderStyle': 'dashed',
+                            'borderRadius': '5px',
+                            'textAlign': 'center',
+                            'margin': '10px'
+                        },
+                        # Allow multiple files to be uploaded
+                        multiple=True
+                    ),
+                ])
+                ],
                 className="rows",
             ),
             html.Br(),
@@ -198,7 +351,7 @@ def side_panel():
                         html.P("MAX PRESSURE"),
                         daq.Gauge(
                             id="progress-gauge",
-                            max= 2,
+                            max=2,
                             min=0,
                             showCurrentValue=False,  # default size 200 pixel
                             size=120,
@@ -227,22 +380,38 @@ def side_panel():
         style={
                 'background-color': '#201a52',
                 'text-align': 'center',
+                'width': '150px',
+                'heigh': 'auto'
             },
     )
 
 #Callback implementation for the tabs
-@app.callback(Output('tabs-content', 'children'),
+@app.callback(Output('tabs-graph-content', 'children'),
               [Input('tabs', 'value')])
 def render_content(tab):
     if tab == 'actual_tab':
         return html.Div([
-            actual_map()
+            wind_map()
         ])
     elif tab == 'predicted_tab':
         return (
             html.Div(    
-                predicted_map()
+                graphy_graph()
             )
+    )
+
+def map_panel():
+    return html.Div(
+        html.Div(
+            id="tabs-map-content",
+            className="five columns",
+            children=[
+                dcc.Graph(id="Rocket_location", figure = locat),
+            ],
+            style={
+                'margin':'20px',
+            },
+        ),
     )
 
 #Main content section
@@ -255,7 +424,20 @@ def build_content():
                         side_panel(),
                     ],
                 ),
-                html.Div(id='tabs-content'),
+                html.Div([
+                    html.Div(
+                        id="tabs-top-content",
+                        children=[
+                            top_panel(),
+                        ]),
+                    html.Div(id='tabs-graph-content'),
+                    html.Div(
+                        id="tabs-map-content",
+                        children=[
+                            map_panel(),
+                        ]),
+                ])
+                
             ],
             className="twelve columns",
             style={
@@ -272,17 +454,27 @@ index_page = html.Div([
             src=app.get_asset_url("Logo.png"),
             id="plotly-image",
             style={
-                'object-fit': 'none',
-                'object-position': '30%',
+                'height':'40%',
+                'width' : '40%',
                 },
         ),
     ]),
-    dcc.Link('Launch', href='/main-page'),
+    dcc.Link(html.Button('Launch'), href='/main-page',
+        style={
+            'font-weight': 'bold',
+            'color': 'white',
+            'padding': '10px 10px',
+            'position': 'relative',
+            'text-decoration': 'none',
+            'text-transform': 'uppercase',
+        }),
     ],
     className="twelve columns",
     style={
         'text-align': 'center',
         'color':'white',
+        'top':'50%',
+        'transform': 'translate(0, 50%)'
         },
 )
 
