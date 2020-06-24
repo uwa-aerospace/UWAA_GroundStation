@@ -3,7 +3,7 @@ import os
 import pathlib
 
 import dash
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash_daq as daq
 import dash_core_components as dcc
 import dash_html_components as html
@@ -21,7 +21,6 @@ app.config.suppress_callback_exceptions = True
 
 #Reading a csv file for Wind Measurement and Graph
 df = px.data.wind()
-pf = pd.read_csv('/Users/GoldenFace/Desktop/Avionics/DataV/Data/pressure.csv')
 
 #Plotting the Wind Measurement
 fig = px.bar_polar(df, r="frequency", theta="direction", color="strength", template="plotly_dark", title='Wind Measurement', 
@@ -89,13 +88,19 @@ def build_banner():
                     id="Launch-indicator",
                     children=[
                         html.Div([
-                            html.Img(
-                                src=app.get_asset_url("LaunchYes.png"),
-                                id="plotly-image2",
+                            html.Div([
+                                daq.PowerButton(
+                                    id="button-1",
+                                    on=False,
+                                    color='#00FF00'
+                                ),
+                                html.Div(id='power-button-1'),
+                                ],
                                 style={
-                                    "height": "100px",
-                                    },
-                            ),
+                                'textAlign': 'center',
+                                'padding':'5px',
+                                "padding-top": "10px",
+                                }),
                         ], 
                         className="two columns"
                         ),
@@ -106,13 +111,19 @@ def build_banner():
                     id="Parachute-indicator",
                     children=[
                         html.Div([
-                            html.Img(
-                                src=app.get_asset_url("ParachuteYes.png"),
-                                id="plotly-image3",
+                            html.Div([
+                                daq.PowerButton(
+                                    id="button-2",
+                                    on=False,
+                                    color='#00FF00'
+                                ),
+                                html.Div(id="power-button-2")
+                            ],
                                 style={
-                                    "height": "100px",
-                                    },
-                            ),
+                                'textAlign': 'center',
+                                'padding':'5px',
+                                "padding-top": "10px",
+                                }),
                         ], 
                         className="two columns"
                         ),
@@ -123,13 +134,19 @@ def build_banner():
                     id="Landing-indicator",
                     children=[
                         html.Div([
-                            html.Img(
-                                src=app.get_asset_url("LandNo.png"),
-                                id="plotly-image4",
+                            html.Div([
+                                daq.PowerButton(
+                                    id="button-3",
+                                    on=False,
+                                    color='#00FF00'
+                                ),
+                                html.Div(id="power-button-3")
+                            ],
                                 style={
-                                    "height": "100px",
-                                    },
-                            ),
+                                'textAlign': 'center',
+                                'padding':'5px',
+                                "padding-top": "10px",
+                                }),
                         ], 
                         className="two columns"
                         ),
@@ -154,28 +171,32 @@ def build_banner():
         )
     ])
 
-#Graphing the first data set the "pressure" one
-def graphy_graph():
+@app.callback(
+    dash.dependencies.Output('power-button-1', 'children'),
+    [dash.dependencies.Input('button-1', 'on')])
+def update_output(on):
+    if on:
+        return 'Launched'
+    else:
+        return 'Not Launched'
 
-    pressure_fig = go.Figure(go.Scatter(x=pf['distance'], y=pf['pressure']))
-    pressure_fig.update_layout(title='Travel Log',
-                    xaxis_title='Time (s)',
-                   yaxis_title='Pressure (Pa)',
-                   plot_bgcolor='rgb(32, 26, 82)',
-                   showlegend=False,
-                   template="plotly_dark",)
+@app.callback(
+    dash.dependencies.Output('power-button-2', 'children'),
+    [dash.dependencies.Input('button-2', 'on')])
+def update_output(on):
+    if on:
+        return 'Delpoyed'
+    else:
+        return 'Not Deployed'
 
-    return html.Div(
-        id="control-chart-container",
-        className="five columns",
-        children=[
-            dcc.Graph(id="pressure", figure = pressure_fig),
-        ],
-        style={
-            'margin':'20px',
-        },
-        
-    )
+@app.callback(
+    dash.dependencies.Output('power-button-3', 'children'),
+    [dash.dependencies.Input('button-3', 'on')])
+def update_output(on):
+    if on:
+        return 'Landed'
+    else:
+        return 'Not Landed'
 
 #Graphing the second data set the "temperature" one
 def wind_map():
@@ -320,7 +341,7 @@ def side_panel():
                             'margin': '10px'
                         },
                         # Allow multiple files to be uploaded
-                        multiple=True
+                        multiple=False
                     ),
                 ])
                 ],
@@ -398,6 +419,83 @@ def render_content(tab):
             html.Div(    
                 graphy_graph()
             )
+    )
+
+def parse_data(contents, filename):
+    content_type, content_string = contents.split(',')
+
+    decoded = base64.b64decode(content_string)
+    try:
+        if 'csv' in filename:
+            # Assume that the user uploaded a CSV or TXT file
+            pf = pd.read_csv(
+                io.StringIO(decoded.decode('utf-8')))
+        elif 'xls' in filename:
+            # Assume that the user uploaded an excel file
+            pf = pd.read_excel(io.BytesIO(decoded))
+        elif 'txt' or 'tsv' in filename:
+            # Assume that the user upl, delimiter = r'\s+'oaded an excel file
+            pf = pd.read_csv(
+                io.StringIO(decoded.decode('utf-8')), delimiter = r'\s+')
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'There was an error processing this file.'
+        ])
+
+    return pf
+
+@app.callback(Output('output-data-upload', 'children'),
+              [Input('upload-data', 'contents'),
+              Input('upload-data', 'filename')])
+def update_output(list_of_contents, list_of_names):
+    if list_of_contents is not None:
+        contents = contents[0]
+        filename = filename[0]
+        pf = parse_data(contents, filename)
+    
+    pressure_fig = go.Figure(go.Scatter(x=pf['distance'], y=pf['pressure']))
+    pressure_fig.update_layout(
+        title='Travel Log',
+        xaxis_title='Time (s)',
+        yaxis_title='Pressure (Pa)',
+        plot_bgcolor='rgb(32, 26, 82)',
+        showlegend=False,
+        template="plotly_dark",)
+
+    return html.Div(
+        id="control-chart-container",
+        className="five columns",
+        children=[
+            dcc.Graph(id="pressure", figure = pressure_fig),
+        ],
+        style={
+            'margin':'20px',
+        },
+        
+    )
+
+#Graphing the first data set the "pressure" one
+def graphy_graph():
+    pressure_fig = go.Figure(go.Scatter())
+    pressure_fig.update_layout(
+        title='Travel Log',
+        xaxis_title='Time (s)',
+        yaxis_title='Pressure (Pa)',
+        plot_bgcolor='rgb(32, 26, 82)',
+        showlegend=False,
+        template="plotly_dark",)
+
+    return html.Div(
+        id="control-chart-container",
+        className="five columns",
+        children=[
+            dcc.Graph(id="pressure", figure = pressure_fig),
+        ],
+        style={
+            'margin':'20px',
+        },
+        
     )
 
 def map_panel():
