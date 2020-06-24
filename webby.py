@@ -21,6 +21,7 @@ app.config.suppress_callback_exceptions = True
 
 #Reading a csv file for Wind Measurement and Graph
 df = px.data.wind()
+pf = []
 
 #Plotting the Wind Measurement
 fig = px.bar_polar(df, r="frequency", theta="direction", color="strength", template="plotly_dark", title='Wind Measurement', 
@@ -207,7 +208,7 @@ def wind_map():
            dcc.Graph(id="Wind_measurement", figure = fig),
         ],
         style={
-            'margin':'20px',
+            'margin':'10px',
             'background-color': '#201a52',
         },
     )
@@ -221,15 +222,23 @@ def top_panel():
                     html.Div(
                         id="card-4",
                         children=[
-                            html.P("MARK 1"),
                             daq.Gauge(
                                 id="progress-gauge",
+                                label='Velocity',
                                 max=100,
                                 min=0,
-                                showCurrentValue=False,  # default size 200 pixel
-                                size=120,
+                                showCurrentValue=True,  # default size 200 pixel
+                                value=75,
+                                units="m/s",
+                                size=80,
                             ),
                         ],
+                        style={
+                            "background": '#201a52',
+                            'padding': '10px',
+                            'height': '125px',
+                            'width': '120px'
+                        },
                     )],
                     className="two columns",
                 ),
@@ -238,15 +247,23 @@ def top_panel():
                     html.Div(
                         id="card-5",
                         children=[
-                            html.P("MARK 2"),
                             daq.Gauge(
                                 id="progress-gauge",
+                                label='Acceleration',
                                 max=80,
                                 min=0,
-                                showCurrentValue=False,  # default size 200 pixel
-                                size=120,
+                                showCurrentValue=True,  # default size 200 pixel
+                                value=66,
+                                units="m/s^2",
+                                size=80,
                             ),
                         ],
+                        style={
+                            "background": '#201a52',
+                            'padding': '10px',
+                            'height': '125px',
+                            'width': '120px'
+                        },
                     )],
                     className="two columns",
                 ),
@@ -255,15 +272,23 @@ def top_panel():
                     html.Div(
                         id="card-6",
                         children=[
-                            html.P("MARK 3"),
                             daq.Gauge(
                                 id="progress-gauge",
+                                label='Height',
                                 max=20,
                                 min=0,
-                                showCurrentValue=False,  # default size 200 pixel
-                                size=120,
+                                showCurrentValue=True,  # default size 200 pixel
+                                value=4,
+                                units="m",
+                                size=80,
                             ),
                         ],
+                        style={
+                            "background": '#201a52',
+                            'padding': '10px',
+                            'height': '125px',
+                            'width': '120px'
+                        },
                     )],
                     className="two columns",
                 ),
@@ -272,15 +297,23 @@ def top_panel():
                     html.Div(
                         id="card-7",
                         children=[
-                            html.P("MARK 4"),
                             daq.Gauge(
                                 id="progress-gauge",
+                                label='Temperature',
                                 max=50,
                                 min=0,
-                                showCurrentValue=False,  # default size 200 pixel
-                                size=120,
+                                showCurrentValue=True,  # default size 200 pixel
+                                value=35,
+                                units="Degrees C",
+                                size=80,
                             ),
                         ],
+                        style={
+                            "background": '#201a52',
+                            'padding': '10px',
+                            'height': '125px',
+                            'width': '120px'
+                        },
                     )],
                     className="two columns",
                 ),
@@ -289,27 +322,36 @@ def top_panel():
                     html.Div(
                         id="card-8",
                         children=[
-                            html.P("MARK 5"),
                             daq.Gauge(
                                 id="progress-gauge",
+                                label='Time',
                                 max=1000,
                                 min=0,
-                                showCurrentValue=False,  # default size 200 pixel
-                                size=120,
+                                showCurrentValue=True,  # default size 200 pixel
+                                value=972,
+                                units="s",
+                                size=80,
                             ),
                         ],
+                        style={
+                            "background": '#201a52',
+                            'padding': '10px',
+                            'height': '125px',
+                            'width': '120px'
+                        },
+                        
                     )],
                     className="two columns",
                 ),
 
             ],
+            style={
+                'padding': '10px',
+                'margin-top': '10px',
+            },
         ),
         className="ten columns",
-        style={
-                'margin': '0 0 0 20px',
-                'background-color': '#201a52',
-                'text-align': 'center',
-            },
+        
     )
 
 #Creating the side panel.
@@ -332,18 +374,23 @@ def side_panel():
                         ]),
                         style={
                             'width': '80%',
-                            'height': '80px',
                             'lineHeight': '40px',
                             'borderWidth': '1px',
                             'borderStyle': 'dashed',
                             'borderRadius': '5px',
                             'textAlign': 'center',
-                            'margin': '10px'
+                            'margin': '10px',
+                            "background": '#110e2c',
                         },
                         # Allow multiple files to be uploaded
                         multiple=False
                     ),
-                ])
+                ],
+                    style={
+                        "background": '#201a52',
+                        'height': '100px',
+                        'padding': '5px',
+                    },)
                 ],
                 className="rows",
             ),
@@ -352,15 +399,20 @@ def side_panel():
                 html.Div(
                     id="card-2",
                     children=[
-                        html.P("MAX HEIGHT"),
                         daq.LEDDisplay(
                             id="operator-led",
+                            label='Max. Height',
                             value="1704",
                             color="#92e0d3",
                             backgroundColor="#110e2c",
                             size=30,
                         ),
                     ],
+                    style={
+                        "background": '#201a52',
+                        'height': '120px',
+                        'align-items': 'center',
+                    },
                 )],
                 className="rows",
             ),
@@ -369,15 +421,22 @@ def side_panel():
                 html.Div(
                     id="card-3",
                     children=[
-                        html.P("MAX PRESSURE"),
                         daq.Gauge(
                             id="progress-gauge",
+                            label='Max. Pressure',
                             max=2,
                             min=0,
-                            showCurrentValue=False,  # default size 200 pixel
+                            showCurrentValue=True,  # default size 200 pixel
                             size=120,
+                            value=1,
+                            units="MPa",
                         ),
                     ],
+                    style={
+                        "background": '#201a52',
+                        'height': '200px',
+                        'align-items': 'center',
+                    },
                 )],
                 className="rows",
                 ),
@@ -387,22 +446,26 @@ def side_panel():
                     id="tabs", 
                     value='predicted_tab', 
                     children=[
-                        dcc.Tab(label='DATA1', value='predicted_tab'),
-                        dcc.Tab(label='DATA2', value='actual_tab'),
+                        dcc.Tab(label='Plot', value='predicted_tab'),
+                        dcc.Tab(label='Wind', value='actual_tab'),
                     ],
-                    style={
-                        'background-color': '#201a52',
+                    colors={
+                        "background": '#110e2c'
                     },
+                    style={
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        'padding': '1px',
+                        'border': '5px solid #201a52'
+                        },
                 ),
             ],
             className="rows",
             ),
         ],
         style={
-                'background-color': '#201a52',
-                'text-align': 'center',
-                'width': '150px',
-                'heigh': 'auto'
+            'text-align': 'center',
+            'width': '150px',
             },
     )
 
@@ -417,7 +480,7 @@ def render_content(tab):
     elif tab == 'predicted_tab':
         return (
             html.Div(    
-                graphy_graph()
+                graphy_graph(pf)
             )
     )
 
@@ -443,48 +506,40 @@ def parse_data(contents, filename):
             'There was an error processing this file.'
         ])
 
-    return pf
+    return html.Div([
+        graphy_graph(pf)
+    ])
 
 @app.callback(Output('output-data-upload', 'children'),
               [Input('upload-data', 'contents'),
               Input('upload-data', 'filename')])
 def update_output(list_of_contents, list_of_names):
     if list_of_contents is not None:
-        contents = contents[0]
-        filename = filename[0]
-        pf = parse_data(contents, filename)
-    
-    pressure_fig = go.Figure(go.Scatter(x=pf['distance'], y=pf['pressure']))
-    pressure_fig.update_layout(
-        title='Travel Log',
-        xaxis_title='Time (s)',
-        yaxis_title='Pressure (Pa)',
-        plot_bgcolor='rgb(32, 26, 82)',
-        showlegend=False,
-        template="plotly_dark",)
-
-    return html.Div(
-        id="control-chart-container",
-        className="five columns",
-        children=[
-            dcc.Graph(id="pressure", figure = pressure_fig),
-        ],
-        style={
-            'margin':'20px',
-        },
-        
-    )
+        children = [
+            parse_contents(c, n) for c, n in
+            zip(list_of_contents, list_of_names)]
+        return children
 
 #Graphing the first data set the "pressure" one
-def graphy_graph():
-    pressure_fig = go.Figure(go.Scatter())
-    pressure_fig.update_layout(
-        title='Travel Log',
-        xaxis_title='Time (s)',
-        yaxis_title='Pressure (Pa)',
-        plot_bgcolor='rgb(32, 26, 82)',
-        showlegend=False,
-        template="plotly_dark",)
+def graphy_graph(pf):
+    if pf!=[]:
+        pressure_fig = go.Figure(go.Scatter())
+        pressure_fig.update_layout(
+            title='Travel BLog',
+            xaxis_title='Time (s)',
+            yaxis_title='Pressure (Pa)',
+            plot_bgcolor='rgb(32, 26, 82)',
+            showlegend=False,
+            template="plotly_dark",)
+    else:
+        pressure_fig = go.Figure(go.Scatter())
+        pressure_fig.update_layout(
+            title='Travel Log',
+            xaxis_title='Time (s)',
+            yaxis_title='Pressure (Pa)',
+            plot_bgcolor='rgb(32, 26, 82)',
+            showlegend=False,
+            template="plotly_dark",)
 
     return html.Div(
         id="control-chart-container",
@@ -493,7 +548,7 @@ def graphy_graph():
             dcc.Graph(id="pressure", figure = pressure_fig),
         ],
         style={
-            'margin':'20px',
+            'margin':'10px',
         },
         
     )
@@ -507,7 +562,7 @@ def map_panel():
                 dcc.Graph(id="Rocket_location", figure = locat),
             ],
             style={
-                'margin':'20px',
+                'margin':'10px',
             },
         ),
     )
@@ -540,7 +595,7 @@ def build_content():
             className="twelve columns",
             style={
                     'background-color': '#110e2c',
-                    'margin':'20px',
+                    'margin':'10px',
                 },
         )
     )
