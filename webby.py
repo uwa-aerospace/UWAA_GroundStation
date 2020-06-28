@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+import base64
+import datetime
 import os
+import io
 import pathlib
 
 import dash
@@ -11,6 +14,7 @@ import dash_html_components as html
 import plotly.graph_objs as go
 import plotly.express as px
 import pandas as pd
+import numpy as np
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -21,7 +25,9 @@ app.config.suppress_callback_exceptions = True
 
 #Reading a csv file for Wind Measurement and Graph
 df = px.data.wind()
-pf = []
+tf = []
+
+
 
 #Plotting the Wind Measurement
 fig = px.bar_polar(df, r="frequency", theta="direction", color="strength", template="plotly_dark", title='Wind Measurement', 
@@ -199,25 +205,21 @@ def update_output(on):
     else:
         return 'Not Landed'
 
-#Graphing the second data set the "temperature" one
-def wind_map():
-    return html.Div(
-        id="control-chart-container",
-        className="five columns",
-        children=[
-           dcc.Graph(id="Wind_measurement", figure = fig),
-        ],
-        style={
-            'margin':'10px',
-            'background-color': '#201a52',
-        },
-    )
-
 def top_panel():
     return html.Div(
         html.Div(
             id="tabs-top-content",
+            className="ten columns",
             children=[
+                html.Div(
+                    html.Br(),
+                    style={
+                        "background": '#110e2c',
+                        'height': '160px',
+                        'width': '10px'
+                    },
+                    className ="one columns"
+                ),
                 html.Div([
                     html.Div(
                         id="card-4",
@@ -328,7 +330,7 @@ def top_panel():
                                 max=1000,
                                 min=0,
                                 showCurrentValue=True,  # default size 200 pixel
-                                value=972,
+                                value=52,
                                 units="s",
                                 size=80,
                             ),
@@ -345,20 +347,18 @@ def top_panel():
                 ),
 
             ],
-            style={
-                'padding': '10px',
-                'margin-top': '10px',
-            },
         ),
-        className="ten columns",
-        
+        style={
+                'height': '160px',
+                'margin-left': '10px',
+                "background": '#201a52',
+            },
     )
 
 #Creating the side panel.
 #Still need to implement the "upload" function to upload data
-#Also a space to capture main info like height and pressure.
-#At the there is a function to switch between the two graphs.
 def side_panel():
+    
     return html.Div(
         id="quick-stats",
         className="two columns",
@@ -369,27 +369,15 @@ def side_panel():
                     dcc.Upload(
                         id='upload-data',
                         children=html.Div([
-                            'Drag and Drop or ',
-                            html.A('Select Files')
-                        ]),
-                        style={
-                            'width': '80%',
-                            'lineHeight': '40px',
-                            'borderWidth': '1px',
-                            'borderStyle': 'dashed',
-                            'borderRadius': '5px',
-                            'textAlign': 'center',
-                            'margin': '10px',
-                            "background": '#110e2c',
-                        },
+                            html.Button('Upload File'),
+                        ],),
                         # Allow multiple files to be uploaded
-                        multiple=False
+                        multiple=True
                     ),
                 ],
                     style={
-                        "background": '#201a52',
+                        "background-color": '#201a52',
                         'height': '100px',
-                        'padding': '5px',
                     },)
                 ],
                 className="rows",
@@ -444,10 +432,10 @@ def side_panel():
             html.Div([
                 dcc.Tabs(
                     id="tabs", 
-                    value='predicted_tab', 
+                    value='second_tab', 
                     children=[
-                        dcc.Tab(label='Plot', value='predicted_tab'),
-                        dcc.Tab(label='Wind', value='actual_tab'),
+                        dcc.Tab(label='Plot', value='second_tab'),
+                        dcc.Tab(label='Wind', value='first_tab'),
                     ],
                     colors={
                         "background": '#110e2c'
@@ -455,7 +443,6 @@ def side_panel():
                     style={
                         'align-items': 'center',
                         'justify-content': 'center',
-                        'padding': '1px',
                         'border': '5px solid #201a52'
                         },
                 ),
@@ -466,6 +453,8 @@ def side_panel():
         style={
             'text-align': 'center',
             'width': '150px',
+            'height': '620px',
+            "background": '#201a52',
             },
     )
 
@@ -473,84 +462,136 @@ def side_panel():
 @app.callback(Output('tabs-graph-content', 'children'),
               [Input('tabs', 'value')])
 def render_content(tab):
-    if tab == 'actual_tab':
+
+    if tab == 'first_tab':
         return html.Div([
             wind_map()
         ])
-    elif tab == 'predicted_tab':
+    
+    elif tab == 'second_tab':
         return (
-            html.Div(    
-                graphy_graph(pf)
-            )
-    )
+            html.Div(id='output-data-upload'),
+        )
 
-def parse_data(contents, filename):
+
+def parse_contents(contents, filename, date):
+
     content_type, content_string = contents.split(',')
-
     decoded = base64.b64decode(content_string)
+
     try:
         if 'csv' in filename:
-            # Assume that the user uploaded a CSV or TXT file
+            # Assume that the user uploaded a CSV file
             pf = pd.read_csv(
                 io.StringIO(decoded.decode('utf-8')))
+            rf = np.append(tf,pf)
+
         elif 'xls' in filename:
             # Assume that the user uploaded an excel file
             pf = pd.read_excel(io.BytesIO(decoded))
+            rf = np.append(tf,pf)
+        
         elif 'txt' or 'tsv' in filename:
             # Assume that the user upl, delimiter = r'\s+'oaded an excel file
             pf = pd.read_csv(
                 io.StringIO(decoded.decode('utf-8')), delimiter = r'\s+')
-    except Exception as e:
-        print(e)
+            rf = np.append(tf,pf)
+
+    except:
         return html.Div([
-            'There was an error processing this file.'
+            dcc.ConfirmDialog(
+                id='confirm',
+                message='There was an error processing this file.',
+            )
         ])
 
     return html.Div([
-        graphy_graph(pf)
+        graphy_graph(rf, pf, filename)
     ])
 
 @app.callback(Output('output-data-upload', 'children'),
-              [Input('upload-data', 'contents'),
-              Input('upload-data', 'filename')])
-def update_output(list_of_contents, list_of_names):
+              [Input('upload-data', 'contents')],
+              [State('upload-data', 'filename'),
+               State('upload-data', 'last_modified')])
+def update_upload_output(list_of_contents, list_of_names, list_of_dates):
+
     if list_of_contents is not None:
+
         children = [
-            parse_contents(c, n) for c, n in
-            zip(list_of_contents, list_of_names)]
+            parse_contents(c, n, d) for c, n, d in
+            zip(list_of_contents, list_of_names, list_of_dates)]
+        
         return children
 
-#Graphing the first data set the "pressure" one
-def graphy_graph(pf):
-    if pf!=[]:
+    else :
         pressure_fig = go.Figure(go.Scatter())
-        pressure_fig.update_layout(
-            title='Travel BLog',
-            xaxis_title='Time (s)',
-            yaxis_title='Pressure (Pa)',
-            plot_bgcolor='rgb(32, 26, 82)',
-            showlegend=False,
-            template="plotly_dark",)
-    else:
-        pressure_fig = go.Figure(go.Scatter())
-        pressure_fig.update_layout(
-            title='Travel Log',
-            xaxis_title='Time (s)',
-            yaxis_title='Pressure (Pa)',
-            plot_bgcolor='rgb(32, 26, 82)',
-            showlegend=False,
-            template="plotly_dark",)
+        pressure_fig.update_layout(title= dict(text ='No File Uploaded', font =dict( color = 'white')),
+                            plot_bgcolor='rgb(32, 26, 82)', paper_bgcolor='#111111', showlegend=False)
+        return (
+            html.Div(  
+                id="control-chart-container",
+                className="five columns",
+                children=[
+                    html.Div(dcc.Graph(id="pressure", figure = pressure_fig))
+                ],
+                style={
+                    'backgroundColor': '#110e2c',
+                    'margin':'10px',
+                    'color': '#110e2c',
+                }
+            )
+        )
 
+#Graphing the uploaded data
+def graphy_graph(rf, pf, filename):
+
+    return (
+
+        html.Div(
+            children=[  
+                html.Div(
+                    id="control-chart-container",
+                    className="five columns",
+                    children=[
+                        dcc.Graph(
+                            id="pressure", 
+                            figure = {
+                                'data': [
+                                    {'x': pf['distance'], 
+                                    'y': pf['pressure'],
+                                    'type': 'scatter'}
+                                ],
+                                'layout':{
+                                    'hovermode': True,
+                                    'title': filename,
+                                    'xaxis_title': "Distance (m)",
+                                    'yaxis_title': "Pressure (MPa)",
+                                    'plot_bgcolor': '#110e2c',
+                                    'paper_bgcolor': '#111111'
+                                }
+                            }),
+                    ],
+                    style={
+                        'margin':'10px',
+                        'backgroundColor': '#110e2c',
+                        'color': "#110e2c",
+                    },),
+            ],)
+    )
+##
+
+#Graphing the wind map
+def wind_map():
     return html.Div(
         id="control-chart-container",
         className="five columns",
         children=[
-            dcc.Graph(id="pressure", figure = pressure_fig),
+           dcc.Graph(id="Wind_measurement", figure = fig),
         ],
         style={
             'margin':'10px',
+            'background-color': '#201a52',
         },
-        
     )
 
 def map_panel():
