@@ -86,88 +86,34 @@ def build_banner():
                                     },
                             ),
                         ], 
-                        className="six columns"
+                        className="eight columns"
                         ),
                         
                     ],
                 ),
-                html.Div(
-                    id="Launch-indicator",
-                    children=[
-                        html.Div([
-                            html.Div([
-                                daq.PowerButton(
-                                    id="button-1",
-                                    on=False,
-                                    color='#00FF00'
-                                ),
-                                html.Div(id='power-button-1'),
-                                ],
-                                style={
-                                'textAlign': 'center',
-                                'padding':'5px',
-                                "padding-top": "10px",
-                                }),
-                        ], 
-                        className="two columns"
-                        ),
-                        
-                    ],
+                html.Div([
+                    daq.ToggleSwitch(
+                        id="tabs", 
+                        label=['Live', 'Upload'],
+                        style={'width': '250px', 'margin': 'auto'}, 
+                        value=False
+                    ),],
+                    style={
+                        'justify-content': 'center',
+                        'border': '5px solid #110e2c',
+                        'padding': '10px',
+                    },
+                    className="four columns",
                 ),
-                html.Div(
-                    id="Parachute-indicator",
-                    children=[
-                        html.Div([
-                            html.Div([
-                                daq.PowerButton(
-                                    id="button-2",
-                                    on=False,
-                                    color='#00FF00'
-                                ),
-                                html.Div(id="power-button-2")
-                            ],
-                                style={
-                                'textAlign': 'center',
-                                'padding':'5px',
-                                "padding-top": "10px",
-                                }),
-                        ], 
-                        className="two columns"
-                        ),
-                        
-                    ],
-                ),
-                html.Div(
-                    id="Landing-indicator",
-                    children=[
-                        html.Div([
-                            html.Div([
-                                daq.PowerButton(
-                                    id="button-3",
-                                    on=False,
-                                    color='#00FF00'
-                                ),
-                                html.Div(id="power-button-3")
-                            ],
-                                style={
-                                'textAlign': 'center',
-                                'padding':'5px',
-                                "padding-top": "10px",
-                                }),
-                        ], 
-                        className="two columns"
-                        ),
-                        
-                    ],
-                ),
+                
             ],
             style={
                 "height": "100px",
                 "width": "auto",
                 'background-color': '#110e2c',
                 'color': '#FFFFFF',
-                "margin-bottom": "10px",
-            },
+                "margin-bottom": "5px",
+            }
         ),
         html.Div(
             html.Br(),
@@ -178,32 +124,20 @@ def build_banner():
         )
     ])
 
-@app.callback(
-    dash.dependencies.Output('power-button-1', 'children'),
-    [dash.dependencies.Input('button-1', 'on')])
-def update_output(on):
-    if on:
-        return 'Launched'
-    else:
-        return 'Not Launched'
+#Callback implementation for the tabs
+@app.callback(Output('tabs-graph-content', 'children'),
+              [Input('tabs', 'value')])
+def render_content(tab):
 
-@app.callback(
-    dash.dependencies.Output('power-button-2', 'children'),
-    [dash.dependencies.Input('button-2', 'on')])
-def update_output(on):
-    if on:
-        return 'Delpoyed'
-    else:
-        return 'Not Deployed'
-
-@app.callback(
-    dash.dependencies.Output('power-button-3', 'children'),
-    [dash.dependencies.Input('button-3', 'on')])
-def update_output(on):
-    if on:
-        return 'Landed'
-    else:
-        return 'Not Landed'
+    if tab :
+        return (
+            html.Div(id='output-data-upload'),
+        )
+    else :
+        return html.Div([
+            wind_map()
+        ])
+        
 
 def top_panel():
     return html.Div(
@@ -222,6 +156,34 @@ def top_panel():
                 ),
                 html.Div([
                     html.Div(
+                        id="card-2",
+                        children=[
+                            html.Div([
+                                html.Div(id='slider-output-container')
+                                ], 
+                                className="three columns"),
+                            html.Div([
+                                daq.Slider(
+                                    id='my-slider',
+                                    min=0,
+                                    max=2000,
+                                    step=1,
+                                    value=0,
+                                    handleLabel={"showCurrentValue": True,"label": " "},
+                                ),
+                            ],className="three columns"),
+                        ],
+                        style={
+                            "background": '#201a52',
+                            'height': '100px',
+                            'align-items': 'center',
+                        },
+                        className="six columns"
+                    )],
+                ),
+                
+                html.Div([
+                    html.Div(
                         id="card-4",
                         children=[
                             daq.Gauge(
@@ -237,12 +199,11 @@ def top_panel():
                         ],
                         style={
                             "background": '#201a52',
-                            'padding': '10px',
                             'height': '125px',
                             'width': '120px'
                         },
                     )],
-                    className="two columns",
+                    className="one columns",
                 ),
 
                 html.Div([
@@ -262,12 +223,11 @@ def top_panel():
                         ],
                         style={
                             "background": '#201a52',
-                            'padding': '10px',
                             'height': '125px',
                             'width': '120px'
                         },
                     )],
-                    className="two columns",
+                    className="one columns",
                 ),
 
                 html.Div([
@@ -276,39 +236,48 @@ def top_panel():
                         children=[
                             daq.Gauge(
                                 id="progress-gauge",
-                                label='Height',
+                                label='Pressure',
                                 max=20,
                                 min=0,
                                 showCurrentValue=True,  # default size 200 pixel
                                 value=4,
-                                units="m",
+                                units="mPa",
                                 size=80,
                             ),
                         ],
                         style={
                             "background": '#201a52',
-                            'padding': '10px',
                             'height': '125px',
                             'width': '120px'
                         },
                     )],
-                    className="two columns",
+                    className="one columns",
                 ),
 
                 html.Div([
                     html.Div(
                         id="card-7",
                         children=[
-                            daq.Gauge(
-                                id="progress-gauge",
-                                label='Temperature',
-                                max=50,
-                                min=0,
-                                showCurrentValue=True,  # default size 200 pixel
-                                value=35,
-                                units="Degrees C",
-                                size=80,
-                            ),
+                            html.Div([
+                                daq.LEDDisplay(
+                                    id="maxHeight-led",
+                                    label='Max. Height (m)',
+                                    labelPosition='left',
+                                    value= 200,
+                                    color="#92e0d3",
+                                    backgroundColor="#110e2c",
+                                    size=20,
+                            )], className="rows",),
+                            html.Div([
+                                daq.LEDDisplay(
+                                    id="timeForMaxHeight-led",
+                                    label='Time(s)',
+                                    labelPosition='left',
+                                    value= 2639,
+                                    color="#92e0d3",
+                                    backgroundColor="#110e2c",
+                                    size=20,
+                            )], className="rows",),
                         ],
                         style={
                             "background": '#201a52',
@@ -319,41 +288,24 @@ def top_panel():
                     )],
                     className="two columns",
                 ),
-
-                html.Div([
-                    html.Div(
-                        id="card-8",
-                        children=[
-                            daq.Gauge(
-                                id="progress-gauge",
-                                label='Time',
-                                max=1000,
-                                min=0,
-                                showCurrentValue=True,  # default size 200 pixel
-                                value=52,
-                                units="s",
-                                size=80,
-                            ),
-                        ],
-                        style={
-                            "background": '#201a52',
-                            'padding': '10px',
-                            'height': '125px',
-                            'width': '120px'
-                        },
-                        
-                    )],
-                    className="two columns",
-                ),
-
+                html.Br(),
             ],
         ),
-        style={
-                'height': '160px',
-                'margin-left': '10px',
-                "background": '#201a52',
-            },
     )
+
+@app.callback(
+    dash.dependencies.Output('slider-output-container', 'children'),
+    [dash.dependencies.Input('my-slider', 'value')])
+def update_output(value):
+    return html.Div(
+        daq.LEDDisplay(
+            id="operator-led",
+            label='Time(s)',
+            value= value,
+            color="#92e0d3",
+            backgroundColor="#110e2c",
+            size=20,
+        ))
 
 #Creating the side panel.
 #Still need to implement the "upload" function to upload data
@@ -383,72 +335,75 @@ def side_panel():
                 className="rows",
             ),
             html.Br(),
-            html.Div([
-                html.Div(
-                    id="card-2",
+            html.Div(
+                    id="Launch-indicator",
                     children=[
-                        daq.LEDDisplay(
-                            id="operator-led",
-                            label='Max. Height',
-                            value="1704",
-                            color="#92e0d3",
-                            backgroundColor="#110e2c",
-                            size=30,
+                        html.Div([
+                            html.Div([
+                                daq.PowerButton(
+                                    id="button-1",
+                                    on=False,
+                                    color='#00FF00'
+                                ),
+                                html.Div(id='power-button-1'),
+                                ],
+                                style={
+                                'textAlign': 'center',
+                                'padding':'5px',
+                                "padding-top": "10px",
+                                }),
+                        ], 
+                        className="rows",
                         ),
+                        
                     ],
-                    style={
-                        "background": '#201a52',
-                        'height': '120px',
-                        'align-items': 'center',
-                    },
-                )],
-                className="rows",
-            ),
-            html.Br(),
-            html.Div([
+                ),
                 html.Div(
-                    id="card-3",
+                    id="Parachute-indicator",
                     children=[
-                        daq.Gauge(
-                            id="progress-gauge",
-                            label='Max. Pressure',
-                            max=2,
-                            min=0,
-                            showCurrentValue=True,  # default size 200 pixel
-                            size=120,
-                            value=1,
-                            units="MPa",
+                        html.Div([
+                            html.Div([
+                                daq.PowerButton(
+                                    id="button-2",
+                                    on=False,
+                                    color='#00FF00'
+                                ),
+                                html.Div(id="power-button-2")
+                            ],
+                                style={
+                                'textAlign': 'center',
+                                'padding':'5px',
+                                "padding-top": "10px",
+                                }),
+                        ], 
+                        className="rows",
                         ),
+                        
                     ],
-                    style={
-                        "background": '#201a52',
-                        'height': '200px',
-                        'align-items': 'center',
-                    },
-                )],
-                className="rows",
                 ),
-            html.Br(),
-            html.Div([
-                dcc.Tabs(
-                    id="tabs", 
-                    value='second_tab', 
+                html.Div(
+                    id="Landing-indicator",
                     children=[
-                        dcc.Tab(label='Plot', value='second_tab'),
-                        dcc.Tab(label='Wind', value='first_tab'),
+                        html.Div([
+                            html.Div([
+                                daq.PowerButton(
+                                    id="button-3",
+                                    on=False,
+                                    color='#00FF00'
+                                ),
+                                html.Div(id="power-button-3")
+                            ],
+                                style={
+                                'textAlign': 'center',
+                                'padding':'5px',
+                                "padding-top": "10px",
+                                }),
+                        ], 
+                        className="rows",
+                        ),
+                        
                     ],
-                    colors={
-                        "background": '#110e2c'
-                    },
-                    style={
-                        'align-items': 'center',
-                        'justify-content': 'center',
-                        'border': '5px solid #201a52'
-                        },
                 ),
-            ],
-            className="rows",
-            ),
         ],
         style={
             'text-align': 'center',
@@ -458,20 +413,33 @@ def side_panel():
             },
     )
 
-#Callback implementation for the tabs
-@app.callback(Output('tabs-graph-content', 'children'),
-              [Input('tabs', 'value')])
-def render_content(tab):
+@app.callback(
+    dash.dependencies.Output('power-button-1', 'children'),
+    [dash.dependencies.Input('button-1', 'on')])
+def update_output(on):
+    if on:
+        return 'Launched'
+    else:
+        return 'Not Launched'
 
-    if tab == 'first_tab':
-        return html.Div([
-            wind_map()
-        ])
-    
-    elif tab == 'second_tab':
-        return (
-            html.Div(id='output-data-upload'),
-        )
+@app.callback(
+    dash.dependencies.Output('power-button-2', 'children'),
+    [dash.dependencies.Input('button-2', 'on')])
+def update_output(on):
+    if on:
+        return 'Delpoyed'
+    else:
+        return 'Not Deployed'
+
+@app.callback(
+    dash.dependencies.Output('power-button-3', 'children'),
+    [dash.dependencies.Input('button-3', 'on')])
+def update_output(on):
+    if on:
+        return 'Landed'
+    else:
+        return 'Not Landed'
+
 
 
 def parse_contents(contents, filename, date):
@@ -590,7 +558,6 @@ def wind_map():
         ],
         style={
             'margin':'10px',
-            'background-color': '#201a52',
         },
     )
 
