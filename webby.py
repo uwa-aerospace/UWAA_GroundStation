@@ -11,6 +11,7 @@ import dash_daq as daq
 import dash_core_components as dcc
 import dash_html_components as html
 
+
 import plotly.graph_objs as go
 import plotly.express as px
 import pandas as pd
@@ -105,23 +106,25 @@ def build_banner():
                     },
                     className="four columns",
                 ),
+
+                 html.Div(
+                    html.Br(),
+                    style={
+                        "height": "10px",
+                        'background-color': '#201a52',
+                    },
+                    className="twelve columns",
+                )
                 
             ],
             style={
                 "height": "100px",
-                "width": "auto",
+                "width": "100%",
                 'background-color': '#110e2c',
                 'color': '#FFFFFF',
                 "margin-bottom": "5px",
             }
         ),
-        html.Div(
-            html.Br(),
-            style={
-                "height": "10px",
-                'background-color': '#201a52',
-            },
-        )
     ])
 
 #Callback implementation for the tabs
@@ -131,11 +134,35 @@ def render_content(tab):
 
     if tab :
         return (
+            html.Div(
+                    id="status-container",
+                    children=[
+                        upload_side_panel(),
+                    ],
+                ),
             html.Div(id='output-data-upload'),
+            html.Div(
+                id="tabs-map-content",
+                children=[
+                    map_panel(),
+            ]),
         )
     else :
         return html.Div([
-            wind_map()
+            html.Div(
+                    id="status-container",
+                    children=[
+                        live_side_panel(),
+                    ],
+                ),
+            html.Div(
+                id="tabs-top-content",
+                children=[
+                    top_panel(),
+                ]),
+                
+            wind_map(),
+            map_panel(),
         ])
         
 
@@ -163,14 +190,26 @@ def top_panel():
                                 ], 
                                 className="three columns"),
                             html.Div([
-                                daq.Slider(
-                                    id='my-slider',
-                                    min=0,
-                                    max=2000,
-                                    step=1,
-                                    value=0,
-                                    handleLabel={"showCurrentValue": True,"label": " "},
+                                html.Div(
+                                    html.Br(),
+                                    style={
+                                        "height": "50px",
+                                        'background-color': '#201a52',
+                                    },
+                                    className="rows"
                                 ),
+                                html.Div(
+                                    daq.Slider(
+                                        id='my-slider',
+                                        min=0,
+                                        max=2000,
+                                        step=1,
+                                        value=0,
+                                        handleLabel={"showCurrentValue": True,"label": " "},
+                                    ),
+                                    className="rows"
+                                ),
+                                
                             ],className="three columns"),
                         ],
                         style={
@@ -261,28 +300,18 @@ def top_panel():
                             html.Div([
                                 daq.LEDDisplay(
                                     id="maxHeight-led",
-                                    label='Max. Height (m)',
-                                    labelPosition='left',
+                                    label='Height (m)',
+                                    labelPosition='top',
                                     value= 200,
                                     color="#92e0d3",
                                     backgroundColor="#110e2c",
                                     size=20,
-                            )], className="rows",),
-                            html.Div([
-                                daq.LEDDisplay(
-                                    id="timeForMaxHeight-led",
-                                    label='Time(s)',
-                                    labelPosition='left',
-                                    value= 2639,
-                                    color="#92e0d3",
-                                    backgroundColor="#110e2c",
-                                    size=20,
-                            )], className="rows",),
+                            )])
                         ],
                         style={
                             "background": '#201a52',
                             'padding': '10px',
-                            'height': '125px',
+                            'height': '105px',
                             'width': '120px'
                         },
                     )],
@@ -307,33 +336,12 @@ def update_output(value):
             size=20,
         ))
 
-#Creating the side panel.
-#Still need to implement the "upload" function to upload data
-def side_panel():
+def live_side_panel():
     
     return html.Div(
         id="quick-stats",
         className="two columns",
         children=[
-            html.Br(),
-            html.Div([
-                html.Div([
-                    dcc.Upload(
-                        id='upload-data',
-                        children=html.Div([
-                            html.Button('Upload File'),
-                        ],),
-                        # Allow multiple files to be uploaded
-                        multiple=True
-                    ),
-                ],
-                    style={
-                        "background-color": '#201a52',
-                        'height': '100px',
-                    },)
-                ],
-                className="rows",
-            ),
             html.Br(),
             html.Div(
                     id="Launch-indicator",
@@ -407,8 +415,7 @@ def side_panel():
         ],
         style={
             'text-align': 'center',
-            'width': '150px',
-            'height': '620px',
+            'height': '1000px',
             "background": '#201a52',
             },
     )
@@ -441,6 +448,47 @@ def update_output(on):
         return 'Not Landed'
 
 
+
+
+#Creating the side panel.
+#Still need to implement the "upload" function to upload data
+def upload_side_panel():
+
+    max_value=40
+    min_value=10
+    
+    return html.Div(
+        id="quick-stats",
+        className="two columns",
+        children=[
+            html.Br(),
+            html.Div([
+                html.Div([
+                    dcc.Upload(
+                        id='upload-data',
+                        children=html.Div([
+                            html.Button('Upload File'),
+                        ],),
+                        # Allow multiple files to be uploaded
+                        multiple=True
+                    ),
+                ],
+                    style={
+                        "background-color": '#201a52',
+                        'height': '100px',
+                    },)
+                ],
+                className="rows",
+            ),
+            html.Br(),
+            html.Div(id="summary-chart")
+        ],
+        style={
+            'text-align': 'center',
+            'height': '1000px',
+            "background": '#201a52',
+            },
+    )
 
 def parse_contents(contents, filename, date):
 
@@ -504,29 +552,63 @@ def update_upload_output(list_of_contents, list_of_names, list_of_dates):
                 ],
                 style={
                     'backgroundColor': '#110e2c',
-                    'margin':'10px',
+                    'margin-left':'10px',
                     'color': '#110e2c',
                 }
             )
         )
 
+def summary(maxV, minV, filename):
+    return (
+        html.Div(
+            id="summary-chart",
+            children=[
+                html.Div([
+                    html.H2(filename),
+                    html.P(
+                        'max. = {}   min. = {}'.format(maxV, minV)
+                    ),
+                ]),
+            ])
+    )
+
 #Graphing the uploaded data
 def graphy_graph(rf, pf, filename):
+
+    y_data = np.array([])
+    max_value = 0
+    min_value = 10000
+    
+    pf = pf[:len(pf)-len(rf)]
+
+    for x in pf:
+        y_data=np.append(y_data,x)
+
+
+    for xv in y_data:
+        xv = xv.astype('float64')
+        if xv > max_value:
+            max_value = xv
+            
+        if xv < min_value:
+            min_value = xv
 
     return (
 
         html.Div(
+            id="control-chart-container",
+            className="five columns",
+
             children=[  
                 html.Div(
-                    id="control-chart-container",
-                    className="five columns",
+                    className="rows",
                     children=[
                         dcc.Graph(
                             id="pressure", 
                             figure = {
                                 'data': [
-                                    {'x': pf['distance'], 
-                                    'y': pf['pressure'],
+                                    {'x': rf, 
+                                    'y': y_data,
                                     'type': 'scatter'}
                                 ],
                                 'layout':{
@@ -537,13 +619,19 @@ def graphy_graph(rf, pf, filename):
                                     'plot_bgcolor': '#110e2c',
                                     'paper_bgcolor': '#111111'
                                 }
-                            }),
+                        }),
                     ],
                     style={
-                        'margin':'10px',
                         'backgroundColor': '#110e2c',
+                        'margin-left':'10px',
                         'color': "#110e2c",
                     },),
+                html.Div(
+                    className="rows",
+                    children=[
+                        html.Div(summary(max_value, min_value, filename))
+                    ]
+                )
             ],)
     )
 ##
@@ -563,14 +651,17 @@ def wind_map():
 
 def map_panel():
     return html.Div(
+        
         html.Div(
             id="tabs-map-content",
-            className="five columns",
+            className="ten columns",
             children=[
                 dcc.Graph(id="Rocket_location", figure = locat),
             ],
             style={
-                'margin':'10px',
+                'margin-left':'10px',
+                'margin-top':'10px',
+                'position':'right',
             },
         ),
     )
@@ -579,24 +670,8 @@ def map_panel():
 def build_content():
     return html.Div(
          html.Div([    
-                html.Div(
-                    id="status-container",
-                    children=[
-                        side_panel(),
-                    ],
-                ),
                 html.Div([
-                    html.Div(
-                        id="tabs-top-content",
-                        children=[
-                            top_panel(),
-                        ]),
                     html.Div(id='tabs-graph-content'),
-                    html.Div(
-                        id="tabs-map-content",
-                        children=[
-                            map_panel(),
-                        ]),
                 ])
                 
             ],
@@ -607,6 +682,7 @@ def build_content():
                 },
         )
     )
+
 
 #The fun little Welcome page
 index_page = html.Div([
